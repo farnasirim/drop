@@ -1,0 +1,57 @@
+syntax = "proto3";
+
+package drop;
+
+option go_package = "proto";
+
+service DropApi {
+    rpc TwoStepLogin(LoginRequest) returns (stream LoginResponse) {}
+    rpc PutLink(PutLinkRequest) returns (PutLinkResponse) {}
+    rpc RemoveLink(RemoveLinkRequest) returns (RemoveLinkResponse) {}
+    rpc GetLinks(GetLinksRequest) returns (stream GetLinksResponse) {}
+}
+
+message BaseRequest {
+}
+
+message BaseResponse {
+    int32 code = 1;
+}
+
+message LoginRequest {
+    BaseRequest base = 1;
+}
+
+message LoginResponse {
+    BaseResponse base = 1;
+}
+
+message PutLinkRequest {
+    BaseRequest base = 1;
+
+    string linkText = 2;
+    string linkAddress = 3;
+}
+
+message PutLinkResponse {
+    BaseResponse base = 1;
+}
+
+message RemoveLinkRequest {
+    BaseRequest base = 1;
+
+}
+
+message RemoveLinkResponse {
+    BaseResponse base = 1;
+
+}
+
+message GetLinksRequest {
+    BaseRequest base = 1;
+
+}
+
+message GetLinksResponse {
+    BaseResponse base = 1;
+}
