@@ -1,2 +1,7 @@
 /drop
-/proto/drop.pb.go
+
+/proto/*.go
+/proto/*.js
+
+/http/forntend/dist/*
+/http/forntend/node_modules/*
