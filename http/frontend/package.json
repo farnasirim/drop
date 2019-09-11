@@ -1,0 +1,16 @@
+{
+  "name": "frontend",
+  "version": "0.0.1",
+  "description": "drop project frontend",
+  "main": "client.js",
+  "dependencies": {
+    "grpc-web": "^1.0.6",
+    "google-protobuf": "^3.10.0-rc.1",
+    "webpack": "^4.39.3"
+  },
+  "devDependencies": {
+    "webpack-cli": "^3.3.8"
+  },
+  "author": "",
+  "license": "MIT"
+}

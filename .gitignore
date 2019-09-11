@@ -3,5 +3,5 @@
 /proto/*.go
 /proto/*.js
 
-/http/forntend/dist/*
-/http/forntend/node_modules/*
+/http/frontend/dist/*
+/http/frontend/node_modules/*
