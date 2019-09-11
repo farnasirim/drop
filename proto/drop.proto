@@ -15,7 +15,7 @@ message BaseRequest {
 }
 
 message BaseResponse {
-    int32 code = 1;
+    uint32 code = 1;
 }
 
 message LoginRequest {
@@ -40,6 +40,7 @@ message PutLinkResponse {
 message RemoveLinkRequest {
     BaseRequest base = 1;
 
+    string linkText = 2;
 }
 
 message RemoveLinkResponse {
@@ -54,4 +55,6 @@ message GetLinksRequest {
 
 message GetLinksResponse {
     BaseResponse base = 1;
+    string linkText = 2;
+    string linkAddress = 3;
 }
