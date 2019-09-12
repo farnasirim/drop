@@ -35,6 +35,13 @@ static_resources:
           - name: envoy.grpc_web
           - name: envoy.cors
           - name: envoy.router
+      tls_context:
+        common_tls_context:
+          tls_certificates:
+            - certificate_chain:
+                filename: "/etc/fullchain.pem"
+              private_key:
+                filename: "/etc/privkey.pem"
   clusters:
   - name: drop_service
     connect_timeout: 0.25s
