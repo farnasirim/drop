@@ -1,9 +1,7 @@
 const path = require('path');
 
 module.exports = env => {
-  // Use env.<YOUR VARIABLE> here:
-  console.log('NODE_ENV: ', env.NODE_ENV); // 'local'
-  console.log('Production: ', env.production); // true
+  console.log('NODE_ENV: ', env.NODE_ENV);
 
   return {
     entry: './src/index.js',

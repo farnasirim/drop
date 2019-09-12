@@ -6,16 +6,19 @@ const {BaseRequest, BaseResponse,
     RemoveLinkRequest, RemoveLinkResponse} = require('./drop_pb.js');
 const {DropApiClient} = require('./drop_grpc_web_pb.js');
 
-var client = new DropApiClient('http://' + window.location.hostname + ':8081', null, null);
+var grpcEndpoint = "https://farnasirim.ir:18082";
+if (process.env.NODE_ENV != "production") {
+    grpcEndpoint = "http://localhost:8081";
+}
 
-console.log("hi " + process.env.NODE_ENV)
-console.log("wow something")
+console.log(process.env.NODE_ENV);
+
+var client = new DropApiClient(grpcEndpoint, null, null);
 
 // simple unary call
 var request = new GetLinksRequest();
 request.setBase(new BaseRequest());
 
-console.log("about to call getLinks");
 var linksStream = client.getLinks(request, {});
 
 addElement = function(text, href) {
@@ -45,7 +48,6 @@ addElement = function(text, href) {
     listElement.appendChild(deleteTag);
     listElement.appendChild(space);
     listElement.appendChild(anchorTag);
-
     linksList.prepend(listElement);
 }
 
@@ -84,13 +86,10 @@ window.onload = function () {
     }
 }
 
-
 linksStream.on('data', (response) => {
     addElement(response.getLinktext(), response.getLinkaddress());
 });
     
-console.log("after call");
-
 // // server streaming call
 // var streamRequest = new RepeatHelloRequest();
 // streamRequest.setName('World');

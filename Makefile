@@ -4,6 +4,8 @@ VERSION ?= $(shell $(GIT) describe --abbrev=0 --tags 2>/dev/null)
 ENVOY_IMAGE_NAME ?= quay.io/farnasirim/drop-envoy
 DROP_IMAGE_NAME ?= quay.io/farnasirim/drop-server
 IMAGE_VERSION ?= $(VERSION)
+WEBPACK_DEV_FLAGS ?= --mode=development --env.NODE_ENV=local
+WEBPACK_PROD_FLAGS ?= --mode=production --env.NODE_ENV=production -p
 
 drop: grpc-go *.go */*.go */*/*.go
 	go build github.com/farnasirim/drop/cmd/drop
@@ -16,8 +18,11 @@ grpc-js:
 	--js_out=import_style=commonjs:http/frontend \
 	--grpc-web_out=import_style=commonjs,mode=grpcwebtext:http/frontend
 
-frontend: grpc-js
-	cd http/frontend && npx webpack client.js --mode=development --env.NODE_ENV=local
+frontend-dev: grpc-js
+	cd http/frontend && npx webpack $(WEBPACK_DEV_FLAGS) client.js
+
+frontend-prod: grpc-js
+	cd http/frontend && npx webpack $(WEBPACK_PROD_FLAGS) client.js
 
 test: proto/drop.pb.go
 	go test ./...
