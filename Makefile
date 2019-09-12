@@ -1,8 +1,8 @@
 GIT ?= git
 COMMIT := $(shell $(GIT) rev-parse HEAD)
 VERSION ?= $(shell $(GIT) describe --abbrev=0 --tags 2>/dev/null)
-ENVOY_IMAGE_NAME ?= farnasirim/drop-envoy
-DROP_IMAGE_NAME ?= farnasirim/drop-server
+ENVOY_IMAGE_NAME ?= quay.io/farnasirim/drop-envoy
+DROP_IMAGE_NAME ?= quay.io/farnasirim/drop-server
 IMAGE_VERSION ?= $(VERSION)
 
 drop: grpc-go *.go */*.go */*/*.go
@@ -27,10 +27,6 @@ envoy-container:
 
 drop-container: drop
 	docker build --force-rm -t $(DROP_IMAGE_NAME):$(VERSION) .
-
-containers-push: envoy-container drop-container
-	docker push $(ENVOY_IMAGE_NAME):$(VERSION)
-	docker push $(DROP_IMAGE_NAME):$(VERSION)
 
 clean:
 	rm drop
