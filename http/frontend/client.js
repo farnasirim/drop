@@ -1,6 +1,9 @@
 require('google-protobuf')
+var $;
+$ = require('jquery');
 
-const {BaseRequest, BaseResponse,
+const {Record,
+    SubscribeRequest, SubscribeResponse,
     GetLinksRequest, GetLinksResponse,
     PutLinkRequest, PutLinkResponse,
     RemoveLinkRequest, RemoveLinkResponse} = require('./drop_pb.js');
@@ -12,44 +15,10 @@ if (process.env.NODE_ENV != "production") {
 }
 
 console.log(process.env.NODE_ENV);
-
 var client = new DropApiClient(grpcEndpoint, null, null);
 
-// simple unary call
-var request = new GetLinksRequest();
-request.setBase(new BaseRequest());
-
-var linksStream = client.getLinks(request, {});
-
-addElement = function(text, href) {
-    let linksList = document.getElementById("linksList");
-    const anchorTag = document.createElement("a");
-    anchorTag.text = text;
-    anchorTag.href = href;
-
-    const deleteTag = document.createElement("a");
-    deleteTag.text = "[X]";
-    deleteTag.href = "javascript:";
-    deleteTag.onclick = function(e) {
-        var request = new RemoveLinkRequest();
-        request.setBase(new BaseRequest());
-        request.setLinktext(anchorTag.text);
-
-        client.removeLink(request, {}, (err, response) => {
-            }
-        );
-        document.getElementById("linksList").removeChild(e.target.parentNode);
-    };
-
-    const space = document.createElement("span")
-    space.text = " ";
-
-    const listElement = document.createElement("li");
-    listElement.appendChild(deleteTag);
-    listElement.appendChild(space);
-    listElement.appendChild(anchorTag);
-    linksList.prepend(listElement);
-}
+var request = new SubscribeRequest();
+var linksStream = client.subscribe(request, {});
 
 window.onload = function () {
     document.getElementById('linkHref').onpaste = function(e) {
@@ -72,22 +41,89 @@ window.onload = function () {
 
     document.getElementById("submitLink").onclick = function(e) {
         var request = new PutLinkRequest();
-        request.setBase(new BaseRequest());
+        var link = new Record();
         var href = document.getElementById("linkHref").value;
         var text = document.getElementById("linkText").value;
-        request.setLinkaddress(document.getElementById("linkHref").value);
-        request.setLinktext(document.getElementById("linkText").value);
-
-        addElement(text, href);
+        link.setLinkaddress(href);
+        link.setLinktext(text);
+        request.setLink(link);
 
         client.putLink(request, {}, (err, response) => {
-            }
-        );
+            let record = response.getLecord();
+            tryCreateLink(record.getId(), record.getLinktext(), record.getLinkaddress());
+        });
     }
 }
 
+elementIdFromRecordId = function(id) {
+    return "record-" + id;
+}
+
+tryDeleteLink = function(id) {
+    elemId = elementIdFromRecordId(id);
+    elem = document.getElementById(elemId)
+    if(elem) {
+        elem.parentNode.removeChild(elem);
+    }
+}
+
+tryCreateLink = function(id, text, addr) {
+    let linksList = document.getElementById("linksList");
+    const anchorTag = document.createElement("a");
+    anchorTag.text = text;
+    anchorTag.href = addr;
+
+    const deleteTag = document.createElement("a");
+    deleteTag.text = "[X]";
+    deleteTag.href = "javascript:";
+    deleteTag.onclick = function(e) {
+        var request = new RemoveLinkRequest();
+        var record = new Record();
+        record.setId(id);
+        request.setLink(record);
+
+        client.removeLink(request, {}, (err, response) => {
+            tryDeleteLink(response.getId());
+        });
+    };
+
+    const space = document.createElement("span")
+    space.text = " ";
+
+    const listElement = document.createElement("li");
+    listElement.className = "linkRecord"
+    listElement.dataset.sortOrder = -id;
+    elemId = elementIdFromRecordId(id);
+    if(document.getElementById(elemId)) {
+
+    }
+    listElement.id = elemId;
+
+    listElement.appendChild(deleteTag);
+    listElement.appendChild(space);
+    listElement.appendChild(anchorTag);
+
+    linksList.prepend(listElement);
+
+    var $wrapper = $('.linksList');
+
+    $wrapper.find('.linkRecord').sort(function(a, b) {
+        key = +a.dataset.sortOrder - +b.dataset.sortOrder;
+        return key
+    })
+    .appendTo($wrapper);
+}
+
 linksStream.on('data', (response) => {
-    addElement(response.getLinktext(), response.getLinkaddress());
+    if(response.getAction() == SubscribeResponse.Action.CREATE) {
+        let record = response.getRecord();
+        tryCreateLink(record.getId(), record.getLinktext(), record.getLinkaddress());
+    } else if(response.getAction() == SubscribeResponse.Action.REMOVE) {
+        let record = response.getRecord();
+        tryDeleteLink(record.getId());
+    } else {
+        console.log(response)
+    }
 });
     
 // // server streaming call
