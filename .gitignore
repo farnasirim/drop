@@ -5,3 +5,5 @@
 
 /http/frontend/dist/*
 /http/frontend/node_modules/*
+/http/frontend/drop_grpc_web_pb.js
+/http/frontend/drop_pb.js
