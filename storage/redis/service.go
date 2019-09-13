@@ -133,7 +133,7 @@ func (s *StorageService) lastId(family string) int64 {
 	return val
 }
 
-func (s *StorageService) allRecordsBefore(ctx context.Context, lastId int64, family string) []*Record {
+func (s *StorageService) allRecords(ctx context.Context, family string) []*Record {
 	recs := make([]*Record, 0)
 
 	keysList, err := s.r.Keys(s.recordsPrefix(family) + "*").Result()
@@ -159,7 +159,7 @@ func (s *StorageService) AllRecords(ctx context.Context, family string) (<-chan 
 	las := s.lastId(family)
 
 	go func() {
-		for _, rec := range s.allRecordsBefore(ctx, s.lastId(family), family) {
+		for _, rec := range s.allRecords(ctx, family) {
 			select {
 			case <-ctx.Done():
 				return
