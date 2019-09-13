@@ -29,7 +29,7 @@ func serveCmdFunc(cmd *cobra.Command, args []string) {
 		log.Fatalf("failed to listen: %v", err)
 	}
 
-	storageServer := redis.NewStorageService(redisAddr)
+	storageServer := redis.NewStorageService(redisAddr, 0)
 
 	grpcServer := grpc.NewServer()
 	proto.RegisterDropApiServer(grpcServer, drop_grpc.NewDropServer(storageServer))

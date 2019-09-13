@@ -1,10 +1,23 @@
 package drop
 
+import (
+	"context"
+)
+
+type Record interface {
+	ID() int64
+	Text() string
+	Address() string
+}
+
 type StorageService interface {
-	PutObject(family, key string, value []byte) error
-	DeleteObject(family, key string) error
-	GetObjectValue(family, key string) ([]byte, error)
-	GetObjectList(family string) ([]string, error)
+	PutRecord(family string, rec Record) (int64, error)
+	DeleteRecord(family string, key int64) error
+	GetRecord(family string, key int64) (Record, error)
+
+	AllRecords(ctx context.Context, family string) (<-chan Record, int64)
+	AllCreateEventsAfter(ctx context.Context, family string, lastId int64) <-chan Record
+	AllDeleteEvents(ctx context.Context, family string) <-chan Record
 
 	// GetObjectsValues
 	// GetObjectListPaginated

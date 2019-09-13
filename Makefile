@@ -25,7 +25,7 @@ frontend-prod: grpc-js
 	cd http/frontend && npx webpack $(WEBPACK_PROD_FLAGS) client.js
 
 test: proto/drop.pb.go
-	go test ./...
+	go test -v ./...
 
 envoy-container:
 	cd envoy; docker build -t $(ENVOY_IMAGE_NAME):$(VERSION) .
