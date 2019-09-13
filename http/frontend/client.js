@@ -50,7 +50,7 @@ window.onload = function () {
 
         client.putLink(request, {}, (err, response) => {
             let record = response.getLink();
-            tryCreateLink(record.getId(), record.getLinktext(), record.getLinkaddress());
+            // tryCreateLink(record.getId(), record.getLinktext(), record.getLinkaddress());
         });
     }
 }
@@ -83,7 +83,7 @@ tryCreateLink = function(id, text, addr) {
         request.setLink(record);
 
         client.removeLink(request, {}, (err, response) => {
-            tryDeleteLink(response.getId());
+            // tryDeleteLink(response.getId());
         });
     };
 
