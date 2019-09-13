@@ -4,6 +4,11 @@ Put/Remove your links and access them from multiple devices as they're updated i
 ## Quicker demo
 [https://farnasirim.ir/drop](https://farnasirim.ir/drop)
 
+## How
+Data is stored in redis. Client and backend communicate over GRPC. Clients
+subscribe for updates using server-side streaming feature of http2 and can
+also submit requests for creating/deleting entries.
+
 ## Quick deployment
 
 Create a docker bridge network to contain the following three containers:
@@ -31,6 +36,17 @@ The frontend is still not served by the drop server, so you need to manually bui
 
 ## Development
 To create any of the above artifacts please refer to the `Makefile`.
+
+## TODO
+  - Adding multi-user support (Authentication)
+    - It must be easy and secure
+    - Proposal: Magic link i.e. emailing people a link that they can click
+      (on a possibly different device) that would automatically log them in.
+  - Adding support for uploading files up to a certain size
+  - Chrome extension to allow for adding links quickly with a hotkey
+  - Making the page mobile friendly
+  - Progressive web app
+  - Json api
 
 ## License
 MIT
