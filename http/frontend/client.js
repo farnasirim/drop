@@ -49,7 +49,7 @@ window.onload = function () {
         request.setLink(link);
 
         client.putLink(request, {}, (err, response) => {
-            let record = response.getLecord();
+            let record = response.getRecord();
             tryCreateLink(record.getId(), record.getLinktext(), record.getLinkaddress());
         });
     }
