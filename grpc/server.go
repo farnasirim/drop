@@ -3,8 +3,6 @@ package grpc
 import (
 	"context"
 
-	"google.golang.org/grpc/codes"
-
 	"github.com/farnasirim/drop"
 	"github.com/farnasirim/drop/proto"
 )
@@ -25,64 +23,71 @@ func (s *DropServer) TwoStepLogin(*proto.LoginRequest, proto.DropApi_TwoStepLogi
 }
 
 func (s *DropServer) PutLink(c context.Context, req *proto.PutLinkRequest) (*proto.PutLinkResponse, error) {
-	println("in put link")
-	code := uint32(codes.OK)
-	if err := s.storage.PutObject("public", req.LinkText, []byte(req.LinkAddress)); err != nil {
-		code = uint32(codes.Internal)
+	record := recordFromProto(req.GetLink())
+	id, err := s.storage.PutRecord("public", record)
+	if err != nil {
+		id = -1
 	}
 
+	record.IDField = id
+
 	resp := &proto.PutLinkResponse{
-		Base: &proto.BaseResponse{Code: code},
+		Link: protoFromRecord(record),
 	}
 	return resp, nil
 }
 
 func (s *DropServer) RemoveLink(c context.Context, req *proto.RemoveLinkRequest) (*proto.RemoveLinkResponse, error) {
-	code := uint32(codes.OK)
-	if err := s.storage.DeleteObject("public", req.LinkText); err != nil {
-		code = uint32(codes.Internal)
+	rec := recordFromProto(req.GetLink())
+	if err := s.storage.DeleteRecord("public", req.GetLink().GetId()); err != nil {
+		rec.IDField = -1
 	}
 
 	resp := &proto.RemoveLinkResponse{
-		Base: &proto.BaseResponse{Code: code},
+		Link: protoFromRecord(rec),
 	}
 	return resp, nil
 }
 
-func (s *DropServer) GetLinks(req *proto.GetLinksRequest, stream proto.DropApi_GetLinksServer) error {
-	println("in get links")
-	links, err := s.storage.GetObjectList("public")
-	if err != nil {
-		println("err:", err.Error())
-		stream.Send(
-			&proto.GetLinksResponse{
-				Base: &proto.BaseResponse{Code: uint32(codes.Internal)},
-			},
-		)
-		return nil
+func (s *DropServer) Subscribe(req *proto.SubscribeRequest, stream proto.DropApi_SubscribeServer) error {
+	println("in subscribe")
+
+	if req.GetExcludePast() {
+		panic("unsupported!")
 	}
 
-	println("links: ", len(links))
+	base, lastId := s.storage.AllRecords(stream.Context(), "public")
+	creates := s.storage.AllCreateEventsAfter(stream.Context(), "public", lastId)
+	deletes := s.storage.AllDeleteEvents(stream.Context(), "public")
 
-	for _, linkText := range links {
-		println("sending...")
-		linkAddress, err := s.storage.GetObjectValue("public", linkText)
-		if err != nil {
-			println(err.Error())
-			continue
+	done := false
+	for !done {
+		select {
+		case <-stream.Context().Done():
+			done = true
+
+		case record := <-base:
+			stream.Send(
+				&proto.SubscribeResponse{
+					Action: proto.SubscribeResponse_CREATE,
+					Record: protoFromRecord(record),
+				},
+			)
+		case record := <-creates:
+			stream.Send(
+				&proto.SubscribeResponse{
+					Action: proto.SubscribeResponse_CREATE,
+					Record: protoFromRecord(record),
+				},
+			)
+		case record := <-deletes:
+			stream.Send(
+				&proto.SubscribeResponse{
+					Action: proto.SubscribeResponse_REMOVE,
+					Record: protoFromRecord(record),
+				},
+			)
 		}
-		err = stream.Send(
-			&proto.GetLinksResponse{
-				Base:        &proto.BaseResponse{Code: uint32(codes.OK)},
-				LinkText:    linkText,
-				LinkAddress: string(linkAddress),
-			},
-		)
-		if err != nil {
-			println(err.Error())
-		}
-		println("sent ", linkText, " -> ", string(linkAddress))
 	}
-
 	return nil
 }
