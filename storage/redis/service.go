@@ -154,7 +154,7 @@ func (s *StorageService) allRecords(ctx context.Context, family string) []*Recor
 	return recs
 }
 
-func (s *StorageService) AllRecords(ctx context.Context, family string) (<-chan drop.Record, int64) {
+func (s *StorageService) AllRecordsAfter(ctx context.Context, family string, startTime int64) (<-chan drop.Record, int64) {
 	ret := make(chan drop.Record, maxChanSize)
 	las := s.lastId(family)
 
@@ -164,14 +164,18 @@ func (s *StorageService) AllRecords(ctx context.Context, family string) (<-chan 
 			case <-ctx.Done():
 				return
 			default:
-				if rec.ID() <= las {
+				if startTime < rec.ID() && rec.ID() <= las {
 					ret <- rec
 				}
 			}
 		}
 	}()
 
-	return ret, las
+	retTime := las
+	if retTime < startTime {
+		retTime = startTime
+	}
+	return ret, retTime
 }
 
 func (s *StorageService) AllCreateEventsAfter(ctx context.Context, family string, lastId int64) <-chan drop.Record {

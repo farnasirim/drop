@@ -17,8 +17,52 @@ if (process.env.NODE_ENV != "production") {
 console.log(process.env.NODE_ENV);
 var client = new DropApiClient(grpcEndpoint, null, null);
 
-var request = new SubscribeRequest();
-var linksStream = client.subscribe(request, {});
+var lastId = 0;
+connected = false;
+
+reconnect = function() {
+    console.log("in reconnect: ", connected, lastId);
+    if(connected == true) {
+        console.log("done: " , connected);
+        return;
+    }
+    connected = true;
+
+    console.log("try to reconnect");
+
+    var request = new SubscribeRequest();
+    request.setExcludepast(true);
+    var link = new Record();
+    link.setId(lastId);
+    request.setLink(link);
+    linksStream = client.subscribe(request, {});
+
+    if(!linksStream) {
+        connected = false;
+        return;
+    }
+
+    linksStream.on('data', (response) => {
+        if(response.getAction() == SubscribeResponse.Action.CREATE) {
+            let record = response.getRecord();
+            lastId = Math.max(lastId, record.getId());
+            tryCreateLink(record.getId(), record.getLinktext(), record.getLinkaddress());
+        } else if(response.getAction() == SubscribeResponse.Action.REMOVE) {
+            let record = response.getRecord();
+            lastId = Math.max(lastId, record.getId());
+            tryDeleteLink(record.getId());
+        } else {
+            console.log("in linkstream", response)
+        }
+        console.log("last id in data of linkstream", lastId);
+    }).on('end', (response) => {
+        connected = false;
+    }).on('error', (response) => {
+        connected = false;
+    });
+}
+setInterval(reconnect, 1000);
+
 
 window.onload = function () {
     document.getElementById('linkHref').onpaste = function(e) {
@@ -49,6 +93,11 @@ window.onload = function () {
         request.setLink(link);
 
         client.putLink(request, {}, (err, response) => {
+            if(err) {
+                connected = false;
+                putQ.push(request);
+                return;
+            }
             let record = response.getLink();
             // tryCreateLink(record.getId(), record.getLinktext(), record.getLinkaddress());
         });
@@ -83,6 +132,11 @@ tryCreateLink = function(id, text, addr) {
         request.setLink(record);
 
         client.removeLink(request, {}, (err, response) => {
+            if(err) {
+                connected = false;
+                removeQ.push(request);
+                return;
+            }
             // tryDeleteLink(response.getId());
         });
     };
@@ -114,17 +168,6 @@ tryCreateLink = function(id, text, addr) {
     .appendTo($wrapper);
 }
 
-linksStream.on('data', (response) => {
-    if(response.getAction() == SubscribeResponse.Action.CREATE) {
-        let record = response.getRecord();
-        tryCreateLink(record.getId(), record.getLinktext(), record.getLinkaddress());
-    } else if(response.getAction() == SubscribeResponse.Action.REMOVE) {
-        let record = response.getRecord();
-        tryDeleteLink(record.getId());
-    } else {
-        console.log(response)
-    }
-});
     
 // // server streaming call
 // var streamRequest = new RepeatHelloRequest();

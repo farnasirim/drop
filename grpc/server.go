@@ -18,7 +18,6 @@ func NewDropServer(s drop.StorageService) *DropServer {
 }
 
 func (s *DropServer) TwoStepLogin(*proto.LoginRequest, proto.DropApi_TwoStepLoginServer) error {
-	println("in two step")
 	return nil
 }
 
@@ -50,13 +49,13 @@ func (s *DropServer) RemoveLink(c context.Context, req *proto.RemoveLinkRequest)
 }
 
 func (s *DropServer) Subscribe(req *proto.SubscribeRequest, stream proto.DropApi_SubscribeServer) error {
-	println("in subscribe")
+	var lastRec int64 = 0
 
 	if req.GetExcludePast() {
-		panic("unsupported!")
+		lastRec = req.GetLink().GetId()
 	}
 
-	base, lastId := s.storage.AllRecords(stream.Context(), "public")
+	base, lastId := s.storage.AllRecordsAfter(stream.Context(), "public", lastRec)
 	creates := s.storage.AllCreateEventsAfter(stream.Context(), "public", lastId)
 	deletes := s.storage.AllDeleteEvents(stream.Context(), "public")
 
