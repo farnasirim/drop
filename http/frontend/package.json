@@ -6,7 +6,7 @@
   "dependencies": {
     "google-protobuf": "^3.10.0-rc.1",
     "grpc-web": "^1.0.6",
-    "jquery": "^3.4.1",
+    "jquery": "^3.5.0",
     "webpack": "^4.39.3"
   },
   "devDependencies": {
