@@ -7,10 +7,10 @@
     "google-protobuf": "^3.10.0-rc.1",
     "grpc-web": "^1.0.6",
     "jquery": "^3.4.1",
-    "webpack": "^4.39.3"
+    "webpack": "^5.75.0"
   },
   "devDependencies": {
-    "webpack-cli": "^3.3.8"
+    "webpack-cli": "^5.0.1"
   },
   "author": "",
   "license": "MIT"
